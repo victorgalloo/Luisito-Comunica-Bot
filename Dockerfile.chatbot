@@ -1,0 +1,33 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar requirements
+COPY requirements.txt .
+
+# Instalar dependencias de Python
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Crear directorios necesarios
+RUN mkdir -p /app/data /app/chroma_db
+
+# Copiar código
+COPY chatbot.py ./
+
+# Exponer puerto de Streamlit
+EXPOSE 8501
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import streamlit; print('OK')" || exit 1
+
+# Ejecutar chatbot
+CMD ["streamlit", "run", "chatbot.py", "--server.address", "0.0.0.0", "--server.port", "8501"]
+

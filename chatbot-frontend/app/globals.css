@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-zinc-800;
+  }
+  
+  body {
+    @apply bg-black text-white;
+    @apply antialiased;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Vercel-style custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-black/50;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-zinc-800 rounded-full hover:bg-zinc-700;
+  }
+  
+  /* Message bubbles - Vercel style */
+  .message-bubble {
+    @apply rounded-lg px-4 py-3 max-w-3xl break-words;
+    @apply transition-all duration-200;
+  }
+  
+  .message-user {
+    @apply bg-white text-black ml-auto;
+    @apply hover:bg-zinc-50;
+  }
+  
+  .message-assistant {
+    @apply bg-zinc-900 border border-zinc-800;
+    @apply hover:border-zinc-700;
+  }
+  
+  /* Button styles - Vercel style */
+  .btn-primary {
+    @apply bg-white text-black px-6 py-2.5 rounded-lg font-medium
+           hover:bg-zinc-100 transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-zinc-900 border border-zinc-800 text-white px-6 py-2.5 rounded-lg font-medium
+           hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-200;
+  }
+  
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10;
+  }
+  
+  /* Shimmer effect */
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+  
+  .shimmer::before {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent;
+  }
+  
+  /* Subtle glow */
+  .glow {
+    @apply relative;
+  }
+  
+  .glow::before {
+    content: '';
+    @apply absolute inset-0 blur-xl opacity-20;
+    @apply bg-white;
+  }
+}
+

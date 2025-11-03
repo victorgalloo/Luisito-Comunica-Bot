@@ -1,0 +1,121 @@
+services:
+  # Servidor MCP de YouTube Transcript
+  mcp-youtube-transcript:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    container_name: luisito-mcp-youtube
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - luisito-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio auxiliar para transcripciones masivas
+  transcriber:
+    build:
+      context: .
+      dockerfile: Dockerfile.transcriber
+    container_name: luisito-transcriber
+    environment:
+      - MCP_URL=http://mcp-youtube-transcript:8080
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
+      - AZURE_STORAGE_CONTAINER=${AZURE_STORAGE_CONTAINER}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - AZURE_OPENAI_CHAT_DEPLOYMENT=${AZURE_OPENAI_CHAT_DEPLOYMENT}
+      - AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${AZURE_OPENAI_EMBEDDING_DEPLOYMENT}
+      - YOUTUBE_CHANNEL_ID=${YOUTUBE_CHANNEL_ID}
+    volumes:
+      - ./data:/app/data
+      - ./chroma_db:/app/chroma_db
+      - ./.env:/app/.env:ro
+    depends_on:
+      mcp-youtube-transcript:
+        condition: service_healthy
+    networks:
+      - luisito-network
+    profiles:
+      - transcriber
+
+  # Chatbot Streamlit (legacy, ya no se usa)
+  chatbot-streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.chatbot
+    container_name: luisito-chatbot-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
+      - AZURE_STORAGE_CONTAINER=${AZURE_STORAGE_CONTAINER}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - AZURE_OPENAI_CHAT_DEPLOYMENT=${AZURE_OPENAI_CHAT_DEPLOYMENT}
+      - AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${AZURE_OPENAI_EMBEDDING_DEPLOYMENT}
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    depends_on:
+      - mcp-youtube-transcript
+    networks:
+      - luisito-network
+    restart: unless-stopped
+    profiles:
+      - streamlit
+
+  # API FastAPI (backend)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: luisito-api
+    ports:
+      - "8000:8000"
+    environment:
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - AZURE_OPENAI_CHAT_DEPLOYMENT=${AZURE_OPENAI_CHAT_DEPLOYMENT}
+      - AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${AZURE_OPENAI_EMBEDDING_DEPLOYMENT}
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./.env:/app/.env:ro
+    depends_on:
+      - mcp-youtube-transcript
+    networks:
+      - luisito-network
+    restart: unless-stopped
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ./chatbot-frontend
+      dockerfile: Dockerfile
+    container_name: luisito-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    networks:
+      - luisito-network
+    restart: unless-stopped
+
+networks:
+  luisito-network:
+    driver: bridge
+
+volumes:
+  chroma_data:
+  transcripts_data:
+

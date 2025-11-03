@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install youtube-transcript-api (versión compatible)
+RUN pip install --no-cache-dir youtube-transcript-api==1.2.3 defusedxml
+
+# Copy MCP server
+COPY mcp_server.py .
+
+# Expose port
+EXPOSE 8080
+
+# Run server
+CMD ["python", "mcp_server.py"]
+
