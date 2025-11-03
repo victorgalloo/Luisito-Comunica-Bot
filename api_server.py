@@ -68,11 +68,18 @@ def initialize_chatbot():
         return True
     
     try:
-        # Verificar que existe el vector store
+        # Intentar descargar ChromaDB desde Azure si no existe
         persist_directory = "./chroma_db"
         if not Path(persist_directory).exists():
-            print("❌ No se encontró el vector store")
-            return False
+            print("📥 ChromaDB no existe localmente, intentando descargar desde Azure...")
+            try:
+                from download_chromadb_from_azure import download_chromadb_from_azure
+                if not download_chromadb_from_azure():
+                    print("❌ No se pudo descargar el vector store")
+                    return False
+            except Exception as e:
+                print(f"⚠️  Error en descarga: {e}")
+                return False
         
         # Cargar vector store desde ChromaDB local
         client = chromadb.PersistentClient(path=persist_directory)

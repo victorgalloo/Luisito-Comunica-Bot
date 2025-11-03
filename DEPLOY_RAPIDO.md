@@ -20,6 +20,22 @@ cat .env
 
 ## 🌐 Para Producción (24/7 en Internet)
 
+### ⚙️ Paso 0: Preparar ChromaDB para Producción
+
+**ANTES de deployar en producción, debes subir tu ChromaDB a Azure:**
+
+```bash
+# 1. Asegúrate de tener ChromaDB local construido
+ls -la chroma_db/
+
+# 2. Sube ChromaDB a Azure Blob Storage
+python upload_chromadb_to_azure.py
+```
+
+Esto comprime y sube tu vector store a Azure, donde la API lo descargará automáticamente al iniciar.
+
+---
+
 ### Opción 1: Railway (Más Fácil) ⭐ RECOMENDADO
 
 1. **Sube tu código a GitHub**
@@ -29,7 +45,9 @@ cat .env
 3. **Crea dos servicios:**
 
    **Backend:**
-   - Deploy desde `Dockerfile.api`
+   - **Tipo:** Docker Deploy
+   - **Dockerfile Path:** `Dockerfile.api`
+   - **Importante:** Railway clona TODO el repositorio, pero el Dockerfile solo copia lo necesario (api_server.py, requirements.txt, etc.)
    - Variables de entorno:
      ```
      AZURE_OPENAI_ENDPOINT=tu_endpoint
@@ -37,6 +55,8 @@ cat .env
      AZURE_OPENAI_API_VERSION=2024-02-15-preview
      AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4o-mini
      AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002
+     AZURE_STORAGE_CONNECTION_STRING=tu_connection_string
+     AZURE_STORAGE_CONTAINER=luisito-transcripts
      ```
 
    **Frontend:**
@@ -56,11 +76,19 @@ cat .env
 
 ### Opción 2: Render (Gratis para empezar)
 
-1. Ve a [render.com](https://render.com)
+1. Ve a [render.com](https://render.com) y conecta GitHub
 
-2. Crea dos Web Services similares a Railway
+2. **Crea dos Web Services:**
 
-3. Configura igual que Railway
+   **Backend:**
+   - **Tipo:** Docker
+   - **Dockerfile Path:** `Dockerfile.api`
+   - **Variables de entorno:** Igual que Railway (ver arriba)
+
+   **Frontend:**
+   - **Root:** `chatbot-frontend`
+   - **Build:** `npm install && npm run build`
+   - **Start:** `npm start`
 
 **Costo:** Gratis (con límites) o $7/mes
 
@@ -95,8 +123,9 @@ docker-compose up -d
 Antes de deployar:
 
 - [ ] Archivo `.env` configurado con todas las variables
-- [ ] ChromaDB existe en `./chroma_db/` (o está en Azure Blob Storage)
+- [ ] **ChromaDB subido a Azure:** `python upload_chromadb_to_azure.py`
 - [ ] Variables de Azure OpenAI funcionando
+- [ ] `AZURE_STORAGE_CONNECTION_STRING` configurada en producción
 - [ ] `NEXT_PUBLIC_API_URL` apunta al backend correcto (en producción)
 
 ---

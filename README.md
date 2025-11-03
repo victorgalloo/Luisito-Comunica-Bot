@@ -18,6 +18,8 @@ YouTube Videos → MCP Transcript → Azure Blob Storage → ChromaDB → Stream
 
 ## 🚀 Inicio Rápido
 
+> **💡 Para deploy en producción (Railway, Render, etc.)**, ve a [DEPLOY_RAPIDO.md](DEPLOY_RAPIDO.md)
+
 ### Prerrequisitos
 
 - Docker y Docker Compose instalados
